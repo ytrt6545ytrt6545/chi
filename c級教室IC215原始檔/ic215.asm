@@ -13,7 +13,7 @@ SETCPU:
    djnz  r2,$
    MOV   SP,#SPXX
    MOV   TMOD,#21H
-   mov   th1,#0FDh      ;;²¨ÌØÂÊÎª9600
+   mov   th1,#0FDh      ;é€ŸçŽ‡9600
    setb  tr1
    ANL   pcon,#01111111b
    mov   scon,#01010000b

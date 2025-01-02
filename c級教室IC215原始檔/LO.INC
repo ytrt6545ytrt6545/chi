@@ -1,0 +1,200 @@
+LOGO:
+nop
+MOV SA_ADD,#0H
+CALL B_R
+CJNE A,#3FH,NEWIC
+CALL DLA04MS
+CALL DLA04MS
+MOV  SA_ADD,#05H
+CALL B_R
+CJNE A,#6DH,NEWIC
+CALL DLA04MS
+CALL DLA04MS
+;-----------------------------
+;du qu yin liang
+MOV SA_ADD,#SA_V1_ADD
+CALL B_R
+MOV V1DA,SA_DATA
+CALL DLA04MS
+CALL DLA04MS
+;yin liang wei 00
+;mov v1da,#00h
+;-----------------------------
+;kai ji du qu sw cun chu shu ju
+;MOV SA_ADD,#SA_sw_ADD
+;CALL B_R
+;anl sa_data,#00001111b
+;MOV 21h,SA_DATA
+;CALL DLA04MS
+;CALL DLA04MS
+;--------
+;sw shu ju qing ling
+anl 21h,#00001000b
+MOV SA_ADD,#SA_LI_ADD
+CALL B_R
+MOV LINE_DA,SA_DATA
+RET
+NEWIC: ;;\\\\\\\\\\\\\\\\\\\\\\\\\\\
+MOV DPTR,#SAIC   ;;;;;;
+MOV R0,#00H
+MOV R1,#50H         ;xie  logo
+DB_CPU:
+MOV A,R0
+MOVC A,@A+DPTR
+MOV @R1,A
+INC R0
+INC R1
+CJNE R1,#58H,DB_CPU ;;;
+MOV R0,#00H
+MOV R1,#50H
+CALL B_WP
+CALL DLA04MS     ;;W ZHANG HAO
+CALL DLA04MS
+MOV R0,#04H
+MOV R1,#54H
+CALL B_WP           ;;;
+;;-------------chong she qi shi zhi
+MOV V1DA,#00H      ;yi qian 68h
+;MOV V2DA,#40H
+MOV LINE_DA,#1
+MOV SA_ADD,#SA_sw_ADD
+CALL DLA04MS
+MOV SA_DATA,21h
+anl sa_data,#00001111b
+CALL DLA04MS
+CALL DLA04MS
+CALL B_W
+CALL DLA04MS
+MOV SA_ADD,#SA_LI_ADD
+CALL DLA04MS
+MOV SA_DATA,LINE_DA
+CALL DLA04MS
+CALL DLA04MS
+CALL B_W
+CALL DLA04MS
+MOV SA_ADD,#SA_V1_ADD
+CALL DLA04MS
+MOV SA_DATA,V1DA
+CALL DLA04MS
+CALL DLA04MS
+CALL B_W
+RET
+
+COMM_TB:  ;CHUAN KOU TONG BU
+;;//;;//;;//;;// suo you id de ir_led dou liang
+CLR B_POWER
+MOV A,SBUF1            ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+anl a,#00000111b
+anl 21h,#11111000b
+orl 21h,a                   ;cood shi fou xiang tong
+MOV SA_ADD,#SA_sw_ADD       ;dou kongzhi sw1-3
+MOV SA_DATA,21h
+anl sa_data,#00001111b
+CALL B_W
+CALL DLA04MS
+CALL DLA04MS
+mov a,p3
+anl a,#11110000b
+cjne a,sbuf_id,comm_tb_out_r  ;pan duan cood ;;;;;;;;;;;;
+;;//;;//;;//tong id de ir_led liang
+MOV IR_DATA,#0FFH ;;; ir led shan shuo
+mov a,sbuf1
+mov 21h,a
+         mov c,ACC.4
+         MOV B_V_L,C
+         MOV C,ACC.5
+         MOV B_P,C
+         mov c,acc.6
+         mov b_page,c
+         MOV C,ACC.7
+         MOV B_PRI,C
+MOV V1DA,SBUF2
+MOV LINE_DA,SBUF3
+LOOPW:
+CALL DLA04MS
+MOV SA_ADD,#SA_V1_ADD
+CALL DLA04MS
+MOV SA_DATA,V1DA
+CALL DLA04MS
+CALL DLA04MS
+CALL B_W
+NOP
+;CALL B_R
+;CJNE  A,V1DA,LOOPW
+CALL DLA04MS
+;CALL DLA04MS
+LOOPW2:
+MOV SA_ADD,#SA_LI_ADD
+CALL DLA04MS
+MOV SA_DATA,LINE_DA
+CALL DLA04MS
+CALL DLA04MS
+CALL B_W
+NOP
+;CALL  B_R
+;CJNE  A,LINE_DA,LOOPW2
+;---------TB POWER----------
+;JNB B_POWER,YEAH
+;MOV POWER_DATA,#03FH
+YEAH:
+  JNB   B_P,N_TB_P
+  CALL  POW_OFF_COM
+  RET
+N_TB_P:
+  SETB  P_ON
+  MOV   R0,#V1DA
+  JB    B_V_L,XS_LINE
+  CALL  JISUAN
+  JMP   TGXS
+XS_LINE:
+  DEC   LINE_DA
+  CALL  KCOM14
+TGXS:
+  CALL  LINE_SET
+  call  pt2257_2ch_vl
+comm_tb_out:
+  JB    B_MU,MUTEONON
+  JMP   MUTEOFF
+MUTEONON:
+JMP MUTEON
+comm_tb_out_r:
+mov a,sbuf1
+mov c,acc.6
+mov B_PAGE,c
+MOV C,ACC.7
+MOV B_PRI,C
+jnb B_PAGE,PAGENO
+CLR B_PAGE_LED
+CLR B_PAGE
+JNB B_MU,JRET
+CLR MANA
+setb MANA2
+CALL GOOD
+JRET:
+JNB  B_PRI,REALRET2
+JB   B_MU,CLMU_PRI
+
+REALRET:
+        RET
+DFLY11:
+CLR MANA
+CALL RIBENREN
+JMP JRET
+PAGENO:
+CLR B_PAGE_LED
+CLR B_PAGE
+JB MANA2,DFLY11
+JMP JRET
+CLMU_PRI:
+     clr    B_PRI
+     CLR    MANA
+     SETB   MANA2
+     CALL   GOOD
+     JMP    REALRET
+REALRET2:
+JB MANA2,DFLY22
+JMP REALRET
+DFLY22:
+CLR MANA
+CALL RIBENREN
+JMP REALRET

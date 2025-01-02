@@ -1,0 +1,313 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   ORG   00h
+   LJMP  SETCPU
+   ORG   03H            ;;INT0 ZHONG DUAN
+   LJMP  INT0ZD
+   ORG   0BH            ;;TR0  ZHONG DUAN
+   LJMP  TR0ZD
+   ORG   23H
+   LJMP  COM_ASCII
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+SETCPU:
+   mov   r2,#0ffh
+   djnz  r2,$
+   MOV   SP,#SPXX
+   MOV   TMOD,#21H
+   mov   th1,#0FDh      ;;²¨ÌØÂÊÎª9600
+   setb  tr1
+   ANL   pcon,#01111111b
+   mov   scon,#01010000b
+   mov   ie,#00010011b
+   mov   ip,#10h
+   setb  b_kk
+   LCALL POW_OFF_COM
+   SETB  INT_D
+   CLR   B_COMM_P1
+   CLR   B_COMM_P2
+   CLR   B_COMM_XP
+   CLR   B_K_TRU
+   CLR   B_YK_TRU
+   CLR   B_YK_DA
+   CLR   B_PAGE
+   CLR   B_ALL_DF
+   SETB  B_P
+   CLR   P_ON
+   CLR   COMM_b1
+   CLR   EA
+   CLR   B_COM
+   SETB  B_MU
+   CLR   MUTE
+   mov   ADDRESS_ID,#0ffh
+   MOV   2EH,#00H
+   MOV   23H,#00H
+   CLR   SC1
+   CLR   SC2
+   CLR   SC3
+   CLR   SC4
+   CLR   B_PAGE
+   CLR   B_PRI
+   MOV   P2,#00000000b
+   CALL  LOGO
+   LCALL benji_id
+   ;SETB  P_ON
+   ;SETB  EA
+   CLR   RT_485
+   mov   pt2257_MUTE_DZ,#01111001b
+   call  pt2257_mute
+   LCALL benji_id
+   clr   B_SW1
+   clr   B_SW2
+   clr   B_SW3
+   SETB  B_P
+   CLR   P_ON
+   SETB  EA
+   ;LCALL send_cpu_id
+   LCALL COMMSENDPOWER
+   ;JB  POWERF,OFFPOWER
+   ;call  send_cpu_id
+   lcall DLA2MS
+   clr   ea
+   clr   es
+   ;SETB  P_ON
+   CALL  POW_OFF_COM
+   lcall DLA2MS
+   CLR   B_YKLX
+   SETB  TR0
+   SETB  TR1
+   MOV   YKTR1,#YKTR11
+   ;SETB p_on
+   CLR   B_V_L    ; XIAN SHI VOL
+   SETB  B_P
+   CLR   B_ALL_DF
+   CLR   B_COM
+   CLR   MANA
+   CLR   MANA2
+   MOV   DLA12,#0ffh
+   lcall DLAXMS
+   lcall DLAXMS
+   lcall DLAXMS
+   lcall DLAXMS
+   lcall DLAXMS
+   nop
+   CLR   COMM_b
+   CLR   B_COMM1
+   CLR   B_COMM2
+   CLR   B_COMM3
+   nop
+   setb  es
+   setb  ea
+   lJMP  MAIN
+SETF:
+   MOV   SP,#SPXX
+   SETB  INT_D
+   MOV   TMOD,#21H
+   ;MOV   TCON,#0H        ;^-^
+   setb  b_kk
+   CLR   B_K_TRU
+   CLR   B_YK_TRU
+   CLR   B_YK_DA
+   CLR   B_PAGE
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   mov    ie,#00010011b
+    CLR   P_ON
+    SETB  B_P
+    CLR   EA
+;=========MUTE YAN SHI
+    SETB  B_MU
+    CLR   MUTE
+    CLR   SC1
+    CLR   SC2
+    MOV   P2,#40H
+;------------------------
+    ORL   P0,#00011000b
+;    CALL  LOGO
+    SETB  P_ON
+    CLR   B_P
+    SETB  EA
+    mov   scon,#01010000b
+    ANL   pcon,#01111111b   ;;su du
+    CLR   RT_485
+    mov   pt2257_MUTE_DZ,#01111001b
+    call  pt2257_mute
+    ;JB    B_COMM_XP,START_DELAY2S
+    ;MOV   COMMDATA1,#57H
+    ;MOV   COMMDATA2,#30H
+    ;MOV   COMMDATA3,#31H
+    ;LCALL send_ZT
+;=============DELAY 2S ===========
+START_DELAY2S:
+    MOV YS2MXSJS,#09FH
+XX:
+    CALL IRRT
+    LCALL COMM_DTZHI
+    CALL DLA2MSXD
+    DJNZ YS2MXSJS,XX
+XXX:
+    CALL IRRT
+    CALL DLA2MSXD
+    LCALL COMM_DTZHI
+    DJNZ YS2MXSJS,XXX
+    clr  b_mu
+    SETB MUTE
+    CLR  B_YKLX
+;MOV DIS3,#063H   ;;BIAO SHI XIAN SHI WEI VOLE 1 ZHI  shang fang kuai
+;CLR B_VOLE   ;; MO REN VOLE 1
+    MOV  R0,#V1DA
+    CALL JISUAN
+    CALL LINE_SET
+    SETB TR0
+    SETB TR1
+    MOV  YKTR1,#YKTR11
+;''''''''''''''
+;MOV YD_DA,#YD_DACS
+    SETB p_on     ;;power on
+    CLR  B_P
+    call pt2257_2ch_vl
+    mov  pt2257_MUTE_DZ,#01111000b
+    call pt2257_mute
+;-------------------
+;CLR B_COMM
+    NOP
+    CLR  B_COM
+    CLR  B_V_L    ; XIAN SHI VOL
+    SETB p_on
+    CLR  B_P
+    CLR  MANA
+    CLR  MANA2
+    CLR  B_POWER
+   CLR   COMM_b
+   CLR   B_COMM1
+   CLR   B_COMM2
+   CLR   B_COMM3
+    MOV  POWER_DATA,#00H
+    NOP
+    JB    B_COMM_XP,MAIN_34
+    LCALL send_cpu_id
+MAIN_34:
+    clr   B_COMM_XP
+    MOV   R0,#0E0H
+    MOV   @R0,LINE_DA
+MAIN:
+    LCALL IRRT
+    LCALL POWERLED
+    lcall COMM_DTZHI
+    LCALL DISPLAY
+    LCALL benji_id
+    LCALL COMM_DTZHI
+    LCALL SC_KEY
+    LCALL COMM_DTZHI
+    LCALL K_COM
+    LCALL COMM_DTZHI
+    JB    B_COM,MAIN_COMM
+    LJMP  MAIN
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+MAIN_COMM:
+    CLR   B_COM
+    MOV   a,COMMSADA
+    cjne  a,#1h,MAIN_COMM1
+    LCALL COMMSENDPOWER
+    LJMP  MAIN
+MAIN_COMM1:
+    cjne  a,#2h,MAIN_COMM2
+    LCALL COMMSENDMUTE
+    LJMP  MAIN
+MAIN_COMM2:
+    cjne  a,#3h,MAIN_COMM3
+    LCALL COMMSENDSW1
+    LJMP  MAIN
+MAIN_COMM3:
+    cjne  a,#4h,MAIN_COMM4
+    LCALL COMMSENDSW2
+    LJMP  MAIN
+MAIN_COMM4:
+    cjne  a,#5h,MAIN_COMM5
+    LCALL COMMSENDSW3
+    LJMP  MAIN
+MAIN_COMM5:
+    cjne a,#6h,MAIN_COMM6
+    call COMMSENDBVL
+    LJMP MAIN
+MAIN_COMM6:
+    cjne a,#7h,MAIN_COMM7
+    call COMMSENDPRI
+    LJMP MAIN
+MAIN_COMM7:
+    cjne  a,#8h,MAIN_COMM8
+    LCALL COMMSENDPAGE
+    LJMP  MAIN
+MAIN_COMM8:
+    cjne  a,#9h,MAIN_COMM9
+    LCALL COMMSENDVOL
+    LJMP  MAIN
+MAIN_COMM9:
+    cjne  a,#0ah,MAIN_COMMa
+    LCALL COMMSENDSOURCE
+    LJMP  MAIN
+MAIN_COMMa:
+    cjne  a,#0bh,MAIN_COMMb
+    LCALL send_cpu_id
+MAIN_COMMb:
+    cjne  a,#0Ch,MAIN_COMMC
+    LCALL send_cpu_idDF
+MAIN_COMMC:
+    LJMP MAIN
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INCLUDE "EQU.INC"
+INCLUDE "IT0wt.INC"
+INCLUDE "IT1.INC"
+INCLUDE "T0.INC"
+INCLUDE "T1.INC"
+INCLUDE "SK.INC"
+INCLUDE "ys.inc"
+INCLUDE "KCO.INC"
+INCLUDE "JS.INC"
+INCLUDE "LS.INC"   ;LINE SETUP
+INCLUDE "SA.INC"
+INCLUDE "LO.INC"
+include "PT2257.INC"
+;INCLUDE "CKZD.INC"
+INCLUDE "IRRT.INC"
+INCLUDE "COM_DATA.INC"
+INCLUDE "COMM_DISPOSE.INC"
+INCLUDE "COM_ASCII_SEND.INC"
+INCLUDE "COM_ASCII_LOAD.INC"
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+SHUZI:
+;    0    1    2    3    4    5    6    7    8    9
+DB 03FH,006H 05BH,04FH,066H,06DH,07DH,007H,07FH,06FH
+
+SAIC:     ;ZH
+DB 03FH,006H 05BH,04FH,066H,06DH,07DH,007H
+
+VOL_DB:
+;   0   1   2   3   4   5   6   7   8   9   A   B  C    D   E   F
+DB  79H,78H,77H,76H,75H,74H,73H,72H,71H,70H,70H,70H,70H,70H,70H,70H
+;   10  11  12  13  14  15  16  17  18  19
+;DB 69H,68H,67H,66H,65H,64H,63H,62H,61H,60H
+DB  69H,68H,67H,66H,65H,64H,63H,62H,61H,60H,60H,60H,60H,60H,60H,60H
+;   20  21  22  23  24  25  26  27  28  29
+;DB 59H,58H,58H,57H,56H,55H,54H,53H,52H,51H,
+DB  59H,58H,58H,57H,56H,55H,54H,53H,52H,51H,51H,51H,51H,51H,51H,51H
+;   30  31  32  33  34  35  36  37  38  39
+;DB 50H,49H,48H,47H,46H,45H,44H,43H,42H,41H,
+DB  50H,49H,48H,47H,46H,45H,44H,43H,42H,41H,41H,41H,41H,41H,41H,41H
+;   40  41  42  43  44  45  46  47  48  49
+;DB 40H,39H,39H,38H,38H,37H,37H,36H,36H,35H,
+DB  40H,39H,39H,38H,37H,37H,37H,36H,36H,35H,35H,35H,35H,35H,35H,35H
+;   50  51  52  53  54  55  56  57  58  59
+;DB 35H,35H,34H,33H,32H,31H,30H,29H,28H,27H,
+DB  35H,34H,33H,32H,31H,30H,29H,28H,27H,26H,16H,16H,16H,16H,16H,16H
+;   60  61  62  63  64  65  66  67  68  69
+;DB 25H,24H,23H,22H,21H,20H,19H,18H,17H,16H,
+DB  25H,24H,23H,22H,21H,20H,19H,18H,17H,16H,16H,16H,16H,16H,16H,16H
+;   70  71  72  73  74  75  76  77  78  79
+;DB 15H,15H,14H,14H,13H,13H,12H,12H,11H,11H,
+DB  15H,15H,14H,14H,13H,13H,12H,12H,11H,11H,11H,11H,11H,11H,11H,11H
+;   80  81  82  83  84  85  86  87  88  89
+;DB 10H,10H,09H,09H,08H,08H,07H,07H,06H,06H,
+DB  10H,10H,09H,09H,08H,08H,07H,07H,06H,06H,06H,06H,06H,06H,06H,06H
+;   90  91  92  93  94  95  96  97  98  99
+;DB 05H,05H,04H,04H,03H,02H,02H,01H,01H,0H
+DB  05H,05H,04H,04H,03H,02H,02H,01H,01H,0H, 0H, 0H, 0H, 0H, 0H, 0H
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+END

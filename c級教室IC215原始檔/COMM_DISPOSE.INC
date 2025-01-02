@@ -1,0 +1,596 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+COMM_DTZHI:
+    NOP
+    JNB   B_COMM1,COMM_DTZHI_OUT
+    nop
+    LCALL ID_DATA
+COMM_DTZHI_OUT:
+    RET
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ID_DATA:
+    clr   ea
+    MOV   COMMLOAD2,55H
+    MOV   COMMLOAD3,56H
+    MOV   COMMLOAD4,57H
+    JNB   B_COMM2,ID_DATA2
+    MOV   55H,59H
+    MOV   56H,5aH
+    MOV   57H,5bH
+    JNB   B_COMM3,ID_DATA3
+    MOV   59H,5DH
+    MOV   5aH,5EH
+    MOV   5bH,5FH
+    CLR   B_COMM3
+    LJMP  DISPOSE
+ID_DATA2:
+    CLR   B_COMM1
+    LJMP  DISPOSE
+ID_DATA3:
+    CLR   B_COMM2
+    LJMP  DISPOSE
+;;;;;;;;
+DISPOSE:
+    setb  ea
+    nop
+    MOV   a,COMMLOAD2
+    CJNE  A,#57H,COMM_R    ;OK
+    LJMP  COMM_W1
+COMM_R:
+    CJNE  A,#52H,COMM_K    ;
+    LJMP  COMM_R1
+COMM_K:
+    CJNE  A,#4BH,COMM_V    ;
+    LJMP  COMM_K1          ;OK
+COMM_V:
+    CJNE  A,#56H,COMM_S    ;
+    LJMP  COMM_V1          ;OK
+COMM_S:
+    CJNE  A,#53H,COMM_SN1  ;
+    LJMP  COMM_S1          ;OK
+COMM_SN1:
+    CJNE  A,#31H,COMM_SN2  ;
+    LJMP  COMM_SN1_1       ;OK
+COMM_SN2:
+    CJNE  A,#32H,COMM_SN3  ;
+    LJMP  COMM_SN2_1       ;OK
+COMM_SN3:
+    CJNE  A,#33H,COMM_SN4  ;
+    LJMP  COMM_SN3_1       ;OK
+COMM_SN4:
+    CJNE  A,#34H,COMM_SN5  ;
+    LJMP  COMM_SN4_1       ;OK
+COMM_SN5:
+    CJNE  A,#35H,COMM_SN6  ;
+    LJMP  COMM_SN5_1       ;OK
+COMM_SN6:
+    CJNE  A,#36H,COMM_SN7  ;
+    LJMP  COMM_SN6_1       ;OK
+COMM_SN7:
+    CJNE  A,#37H,COMM_SN8  ;
+    LJMP  COMM_SN7_1       ;OK
+COMM_SN8:
+    CJNE  A,#38H,commout8  ;
+    LJMP  COMM_SN8_1       ;OK
+;==========================
+commout8:
+    RET
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+COMM_W1_OUT:
+    RET
+COMM_W1:
+    LCALL ASCII_TO_HEX
+    JZ    COMM_W1_OUT
+    DEC   A
+    MOV   DPTR,#COMMW_FUN
+    MOV   B, #03H
+    MUL   AB
+    nop
+    JMP   @A+DPTR
+COMMW_FUN:
+    JMP   COMMW_FUN_01H       ;POWER  ON
+    JMP   COMMW_FUN_02H       ;POWER  OFF
+    JMP   COMMW_FUN_03H       ;MUTE   ON
+    JMP   COMMW_FUN_04H       ;MUTE   OFF
+    JMP   COMMW_FUN_05H       ;SW1    ON
+    JMP   COMMW_FUN_06H       ;SW1    OFF
+    JMP   COMMW_FUN_07H       ;SW2    ON
+    JMP   COMMW_FUN_08H       ;SW2    OFF
+    JMP   COMMW_FUN_09H       ;SW3    ON
+    JMP   COMMW_FUN_0AH       ;SW3    OFF
+    JMP   COMMW_FUN_0BH       ;
+    JMP   COMMW_FUN_0CH       ;
+    JMP   COMMW_FUN_0DH       ;PRI    ON
+    JMP   COMMW_FUN_0EH       ;PRI    OFF
+    JMP   COMMW_FUN_0FH       ;PAGE   ON
+    JMP   COMMW_FUN_10H       ;PAGE   OFF
+    JMP   COMMW_FUN_11H       ;VOL    UP
+    JMP   COMMW_FUN_12H       ;VOL    DOWN
+    JMP   COMMW_FUN_13H       ;SOURCE UP
+    JMP   COMMW_FUN_14H       ;SOURCE DOWN
+    JMP   COMMW_FUN_15H       ;SOURCE NAME   UP
+    JMP   COMMW_FUN_16H       ;SOURCE NAME   DOWN
+    JMP   COMMW_FUN_17H       ;PAGE   NAME   UP
+    JMP   COMMW_FUN_18H       ;PAGE   NAME   DOWN
+    JMP   COMMW_FUN_19H       ;SOURCE SET    UP
+    JMP   COMMW_FUN_1AH       ;SOURCE SET    DOWN
+    JMP   COMMW_FUN_1BH       ;PAGE   SET    UP
+    JMP   COMMW_FUN_1CH       ;PAGE   SET    DOWN
+    NOP
+    NOP
+    LJMP  SETCPU
+COMMW_FUN_01H:
+    JNB   B_P,COMMW_FUN_01HOUT   ;P_ON ÐÂ
+    SETB  B_COMM_XP
+    LCALL POW_ON_COM    ;B_P  ¾É
+COMMW_FUN_01HOUT:
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_02H:
+    SETB  B_COMM_XP
+    LCALL POW_OFF_COM
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_03H:
+    JB    B_MU,COMMW_FUN_03HOUT
+    LCALL MUTEON
+COMMW_FUN_03HOUT:
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_04H:
+    JNB   B_MU,COMMW_FUN_04HOUT
+    LCALL MUTEOFF
+COMMW_FUN_04HOUT:
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_05H:
+    JB    B_SW1,COMMW_FUN_05HOUT
+    SETB  B_SW1
+    JNB   B_MU,COMMW_FUN_05HOUT
+    LCALL MUTEOFF
+COMMW_FUN_05HOUT:
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_06H:
+    JNB   B_SW1,COMMW_FUN_06HOUT
+    CLR   B_SW1
+    JNB   B_MU,COMMW_FUN_06HOUT
+    LCALL MUTEOFF
+COMMW_FUN_06HOUT:
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_07H:
+    JB    B_SW2,COMMW_FUN_07HOUT
+    SETB  B_SW2
+    JNB   B_MU,COMMW_FUN_07HOUT
+    LCALL MUTEOFF
+COMMW_FUN_07HOUT:
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_08H:
+    JNB   B_SW2,COMMW_FUN_08HOUT
+    CLR   B_SW2
+    JNB   B_MU,COMMW_FUN_08HOUT
+    LCALL MUTEOFF
+COMMW_FUN_08HOUT:
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_09H:
+    JB    B_SW3,COMMW_FUN_09HOUT
+    SETB  B_SW3
+    JNB   B_MU,COMMW_FUN_09HOUT
+    LCALL MUTEOFF
+COMMW_FUN_09HOUT:
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_0AH:
+    JNB   B_SW3,COMMW_FUN_0AHOUT
+    CLR   B_SW3
+    JNB   B_MU,COMMW_FUN_0AHOUT
+    LCALL MUTEOFF
+COMMW_FUN_0AHOUT:
+    LJMP  DISPOSE_OUT
+;;;;;;;
+;;;;;;;
+COMMW_FUN_0BH:
+    SETB  B_V_L
+    LJMP  COMM_S1_2
+;;;;;;;
+COMMW_FUN_0CH:
+    CLR   B_V_L
+    LCALL JISUAN
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_0DH:         ;PRI    ON
+    JB    B_PRI,COMMW_FUN_0CHOUT
+    SETB  B_COMM_PRI
+    JB    B_MU,PAGE3X
+    SETB  B_PRI
+    LCALL MUTEOFF
+    NOP;call send_cpu_id
+    SETB  B_KK   ;; dai biao an jian wei song
+    CLR   B_K_TRU
+    RET
+PAGE3X:
+    SETB  B_PRI
+    SETB  MANA
+    CALL  MUTEOFF
+    SETB  B_KK
+    CLR   B_K_TRU
+    RET
+COMMW_FUN_0CHOUT:
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_0EH:         ;PRI    OFF
+    JNB   B_PRI,COMMW_FUN_0EHOUT
+    CLR   B_COMM_PRI
+    CLR   B_PRI
+COMMW_FUN_0EHOUT:
+    CLR   B_COM_PRI
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_0FH:         ;PAGE    ON
+    JB    B_PAGE,COMMW_FUN_0FHOUT
+    SETB  B_PAGE_LED
+    SETB  B_PAGE
+    
+    MOV   R0,#0E0H
+    MOV   @R0,LINE_DA
+    MOV   LINE_DA,#08H
+    LCALL LINE_SET
+    LCALL KEY_DISPLAYSOURCE
+    
+    JB    B_MU,COMMW_FUN_0FHDX
+    SETB  B_KK
+    CLR   B_K_TRU
+    SETB  B_COMM_PAGEA
+    SETB  B_COMM_PAGE
+    SETB  B_COM_PAGE
+    RET
+COMMW_FUN_0FHDX:
+    SETB  MANA
+    CALL  MUTEOFF
+    SETB  B_COMM_PAGEA
+    SETB  B_COMM_PAGE
+    SETB  B_COM_PAGE
+COMMW_FUN_0FHOUT:
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_10H:         ;PAGE    OFF
+    JNB   B_PAGE,COMMW_FUN_10HOUT
+    CLR   B_COMM_PAGEA
+    CLR   B_COMM_PAGE
+    CLR   B_COM_PAGE
+    CLR   B_PAGE_LED
+    CLR   B_PAGE
+    
+    MOV   R0,#0E0H
+    MOV   A,@R0
+    MOV   LINE_DA,A
+    LCALL LINE_SET
+    LCALL KEY_DISPLAYSOURCE
+    
+COMMW_FUN_10HOUT:
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_11H:         ;VOL     UP
+    LCALL JIA
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_12H:         ;VOL     DOWN
+    LCALL JIAN
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_13H:         ;SOURCE   UP
+    ;LCALL COM_NOK15
+    ;SETB  B_COMM_RDSOU
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_14H:         ;SOURCE   DOWN
+    ;LCALL COM_NOK16
+    ;SETB  B_COMM_RDSOU
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_15H:         ;SOURCE NAME  UP
+    ;LCALL NOK15_FD1
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_16H:         ;SOURCE NAME  DOWN
+    ;LCALL NOK16_FD1
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_17H:         ;PAGE   NAME   UP
+    ;LCALL NOK13_FD3
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_18H:         ;PAGE   NAME   DOWN
+    ;LCALL NOK14_FD3
+    LJMP  DISPOSE_OUT
+;;;;;;;;
+COMMW_FUN_19H:         ;SOURCE SET   UP
+    ;LCALL NAME_YES_FD1
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_1AH:         ;SOURCE SET   DOWN
+    ;LCALL SET_GN_NAME_OFF_FD1
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_1BH:         ;PAGE SET   UP
+    ;LCALL PAGE_YES_FD1
+    LJMP  DISPOSE_OUT
+;;;;;;;
+COMMW_FUN_1CH:         ;PAGE SET   DOWN
+    ;LCALL SET_GN_PAGE_OFF_FD1
+    LJMP  DISPOSE_OUT
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+COMM_R1_OUT:
+    RET
+COMM_R1:
+    LCALL ASCII_TO_HEX
+    JZ    COMM_R1_OUT
+    DEC   A
+    MOV   DPTR,#COMMR_FUN
+    MOV   B, #03H
+    MUL   AB
+    nop
+    JMP   @A+DPTR
+COMMR_FUN:
+    JMP   COMMR_FUN_01H       ;READ
+    JMP   COMMR_FUN_02H       ;READ
+    JMP   COMMR_FUN_03H       ;READ PAGE
+    JMP   COMMR_FUN_04H       ;READ PRI
+    JMP   COMMR_FUN_05H       ;READ
+    JMP   COMMR_FUN_06H       ;READ
+    RET
+COMMR_FUN_01H:
+    RET
+COMMR_FUN_02H:
+    RET
+COMMR_FUN_03H:
+    ;LCALL COMM_SENDPAGE
+    RET
+COMMR_FUN_04H:
+    ;LCALL COMM_SENDPRI
+    RET
+COMMR_FUN_05H:
+    RET
+COMMR_FUN_06H:
+    RET
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+COMM_K1_OUT:
+    RET
+COMM_K1:
+    LCALL ASCII_TO_HEX
+    JZ    COMM_K1_OUT
+    DEC   A
+    MOV   DPTR,#COMMK_FUN
+    MOV   B, #03H
+    MUL   AB
+    nop
+    JMP   @A+DPTR
+COMMK_FUN:
+    JMP   COMMW_FUN_01H       ;POWER  ON
+    JMP   COMMW_FUN_02H       ;POWER  OFF
+    JMP   COMMW_FUN_03H       ;MUTE   ON
+    JMP   COMMW_FUN_04H       ;MUTE   OFF
+    JMP   COMMW_FUN_05H       ;SW1    ON
+    JMP   COMMW_FUN_06H       ;SW1    OFF
+    JMP   COMMW_FUN_07H       ;SW2    ON
+    JMP   COMMW_FUN_08H       ;SW2    OFF
+    JMP   COMMW_FUN_09H       ;SW3    ON
+    JMP   COMMW_FUN_0AH       ;SW3    OFF
+    JMP   COMMW_FUN_0BH       ;
+    JMP   COMMW_FUN_0CH       ;
+    JMP   COMMW_FUN_0DH       ;PRI    ON
+    JMP   COMMW_FUN_0EH       ;PRI    OFF
+    JMP   COMMW_FUN_0FH       ;PAGE   ON
+    JMP   COMMW_FUN_10H       ;PAGE   OFF
+    JMP   COMMW_FUN_11H       ;
+    JMP   COMMW_FUN_12H       ;
+    JMP   COMMW_FUN_13H       ;
+    JMP   COMMW_FUN_14H       ;
+    JMP   COMMW_FUN_15H       ;
+    JMP   COMMW_FUN_16H       ;
+    JMP   COMMW_FUN_17H       ;
+    JMP   COMMW_FUN_18H       ;
+    JMP   COMMW_FUN_19H       ;
+    JMP   COMMW_FUN_1AH       ;
+    JMP   COMMW_FUN_1BH       ;
+    JMP   COMMW_FUN_1CH       ;
+    NOP
+    NOP
+    LJMP  SETCPU
+;;;;
+COMM_V1:
+    LCALL ASCII_TO_HEX
+    MOV   pt2257_2ch_vl_dz,A
+    MOV   v1da,A
+    CLR   B_V_L
+    LCALL pt2257_2ch_vl
+    JNB   B_MU,COMMS_FUN_OUT2
+    LCALL MUTEOFF
+COMMS_FUN_OUT2:
+    LCALL JISUAN
+    LCALL P24_SAVE_VOL
+    LJMP  DISPOSE_OUT
+;;;;
+COMM_S1:
+    LCALL ASCII_TO_HEX
+    MOV   LINE_DA,A
+    CJNE  A,#09H,COMM_S1_1
+COMM_S1_1:
+    JC    COMM_S1_2
+    MOV   LINE_DA,#01H
+COMM_S1_2:
+    MOV   A,LINE_DA
+    DEC   A
+    MOV   DPTR,#COMMS_FUN
+    MOV   B, #03H
+    MUL   AB
+    nop
+    JMP   @A+DPTR
+COMMS_FUN:
+    JMP   COMMS_FUN_01H       ;POWER  ON
+    JMP   COMMS_FUN_02H       ;POWER  OFF
+    JMP   COMMS_FUN_03H       ;MUTE   ON
+    JMP   COMMS_FUN_04H       ;MUTE   OFF
+    JMP   COMMS_FUN_05H       ;SW1    ON
+    JMP   COMMS_FUN_06H       ;SW1    OFF
+    JMP   COMMS_FUN_07H       ;SW2    ON
+    JMP   COMMS_FUN_08H       ;SW2    OFF
+COMMS_FUN_01H:
+    LCALL KCOM31
+    LJMP  COMMS_FUN_OUT
+COMMS_FUN_02H:
+    LCALL KCOM32
+    LJMP  COMMS_FUN_OUT
+COMMS_FUN_03H:
+    LCALL KCOM33
+    LJMP  COMMS_FUN_OUT
+COMMS_FUN_04H:
+    LCALL KCOM34
+    LJMP  COMMS_FUN_OUT
+COMMS_FUN_05H:
+    LCALL KCOM35
+    LJMP  COMMS_FUN_OUT
+COMMS_FUN_06H:
+    LCALL KCOM36
+    LJMP  COMMS_FUN_OUT
+COMMS_FUN_07H:
+    LCALL KCOM37
+    LJMP  COMMS_FUN_OUT
+COMMS_FUN_08H:
+    LCALL KCOM38
+    LJMP  COMMS_FUN_OUT
+;;;;
+COMMS_FUN_OUT:
+    LCALL LINE_SET
+    JNB   B_MU,COMMS_FUN_OUT1
+    LCALL MUTEOFF
+COMMS_FUN_OUT1:
+    MOV   18H,#07FH
+    MOV   19H,#0FFH
+    LJMP  DISPOSE_OUT
+;;;;;;;;;;;;;
+;;;;;;;;;;;;;
+COMM_SN1_1:
+    LCALL ASCII_TO_HEX
+    CJNE  A,#14H,COMM_SN1_1X
+COMM_SN1_1X:
+    JNC   COMM_SN1_1Y
+    ;MOV   SOURCENAME_1,A
+COMM_SN1_1Y:
+    RET
+
+COMM_SN2_1:
+    LCALL ASCII_TO_HEX
+    CJNE  A,#14H,COMM_SN1_2X
+COMM_SN1_2X:
+    JNC   COMM_SN1_2Y
+    ;MOV   SOURCENAME_2,A
+COMM_SN1_2Y:
+    RET
+
+COMM_SN3_1:
+    LCALL ASCII_TO_HEX
+    CJNE  A,#14H,COMM_SN1_3X
+COMM_SN1_3X:
+    JNC   COMM_SN1_3Y
+    ;MOV   SOURCENAME_3,A
+COMM_SN1_3Y:
+    RET
+
+COMM_SN4_1:
+    LCALL ASCII_TO_HEX
+    CJNE  A,#14H,COMM_SN1_4X
+COMM_SN1_4X:
+    JNC   COMM_SN1_4Y
+    ;MOV   SOURCENAME_4,A
+COMM_SN1_4Y:
+    RET
+
+COMM_SN5_1:
+    LCALL ASCII_TO_HEX
+    CJNE  A,#14H,COMM_SN1_5X
+COMM_SN1_5X:
+    JNC   COMM_SN1_5Y
+    ;MOV   SOURCENAME_5,A
+COMM_SN1_5Y:
+    RET
+
+COMM_SN6_1:
+    LCALL ASCII_TO_HEX
+    CJNE  A,#14H,COMM_SN1_6X
+COMM_SN1_6X:
+    JNC   COMM_SN1_6Y
+    ;MOV   SOURCENAME_6,A
+COMM_SN1_6Y:
+    RET
+
+COMM_SN7_1:
+    LCALL ASCII_TO_HEX
+    CJNE  A,#14H,COMM_SN1_7X
+COMM_SN1_7X:
+    JNC   COMM_SN1_7Y
+    ;MOV   SOURCENAME_7,A
+COMM_SN1_7Y:
+    RET
+
+COMM_SN8_1:
+    LCALL ASCII_TO_HEX
+    CJNE  A,#14H,COMM_SN1_8X
+COMM_SN1_8X:
+    JNC   COMM_SN1_8Y
+    ;MOV   SOURCENAME_8,A
+COMM_SN1_8Y:
+    RET
+;;;;;;;;;;;;;ASCIIÂë×ª»»ÎªHEXÂë
+ASCII_TO_HEX:
+    MOV   A,COMMLOAD3
+    ANL   A,#11110000B
+    CJNE  A,#30H,ASCII_TO_HEX_OUT
+    MOV   A,COMMLOAD4
+    ANL   A,#11110000B
+    CJNE  A,#30H,ASCII_TO_HEX_OUT1
+    LJMP  ASCII_TO_HEX_ONE
+ASCII_TO_HEX_OUT1:
+    CJNE  A,#40H,ASCII_TO_HEX_OUT
+    LJMP  ASCII_TO_HEX_TWO
+ASCII_TO_HEX_ONE:
+    MOV   A,COMMLOAD3
+    ANL   A,#00001111B
+    SWAP  a
+    MOV   1EH,A
+    MOV   A,COMMLOAD4
+    ANL   A,#00001111B
+    ORL   A,1EH
+    RET
+ASCII_TO_HEX_OUT:
+    MOV   A,#00H
+    RET
+;;;;;;;
+ASCII_TO_HEX_TWO:
+    MOV   A,COMMLOAD3
+    ANL   A,#00001111B
+    swap  a
+    MOV   1EH,A
+    CLR   C
+    MOV   A,COMMLOAD4
+    SUBB  A,#37H
+    NOP
+    ORL   A,1EH
+    RET
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;;=====================;;
+DISPOSE_OUT:
+;    mov   time1,#0ffh;#02Fh    ;#02h
+;    mov   time2,#0ffh;#27h
+;    setb  BACKLIGTE
+;    MOV   SAVE_TIME,#80H
+    RET
+;;;;;;;;;;;;;;;;;;;;;;;;;
+P24_SAVE_VOL:
+    MOV   SA_ADD,#SA_V1_ADD
+    MOV   SA_DATA,V1DA
+    LCALL B_W
+    RET
+;;=====================;;

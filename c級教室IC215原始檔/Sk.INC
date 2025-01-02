@@ -1,0 +1,213 @@
+;;;;;;;;;;;;;;;;;;
+benji_id:
+   ORL   P3,#11110000B
+   NOP
+   nop
+   mov   a,p3
+   NOP
+   CPL   A
+   ANL   a,#11110000b
+   SWAP  a
+   CJNE  a,ADDRESS_ID,ID_addr
+   RET
+ID_addr:
+   clr   ea
+   nop
+   nop
+   nop
+   nop
+   nop
+   ORL   P3,#11110000B
+   NOP
+   nop
+   nop
+   mov   a,p3
+   NOP
+   nop
+   CPL   A
+   ANL   a,#11110000b
+   SWAP  a
+   nop
+   CJNE  a,ADDRESS_ID,ID_addr2
+   nop
+   setb  ea
+   ret
+ID_addr2:
+   MOV   ADDRESS_ID,A
+   ORL   A,#80H
+   MOV   COM_ID,A
+   SETB  B_ALL_DF
+   setb  ea
+   RET
+;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;
+SC_KEY:
+  JB    MANA2,YES
+  ANL   P0,#11100001B
+  ORL   P0,#11100000B
+  MOV   P2,#0FFH
+  ANL   P0,#11011111B
+  LCALL PDHANG
+  JZ    NOH1
+  MOV   KEYDA,#00H
+  ORL   KEYDA,#10H
+  MOV   P2,#0FFH
+  MOV   A,P2
+  CJNE  A,#10111111B,PDLIEJMP
+  ORL   KEYDA,#07H
+  LJMP  LLR
+PDLIEJMP:
+  LJMP  PDLIE
+NOH1:
+  ORL   P0,#11100000B
+  ANL   P0,#10111111B
+  CALL  PDHANG
+  JZ    NOH2
+  MOV   KEYDA,#00H
+  ORL   KEYDA,#20H
+  LJMP  PDLIE
+
+NOH2:ORL  P0,#11100000B
+     ANL  P0,#01111111B
+     CALL PDHANG
+     JZ   NOKEY_PAGE
+     MOV  KEYDA,#00H
+     ORL  KEYDA,#30H
+     LJMP PDLIE
+NOKEY_PAGE:
+     JB    MANA,PAGEKPD
+     JNB   B_PAGE_LED,NOKEY
+     JNB   B_KK,NOKEY
+     JB    B_COMM_PAGE,NOKEY
+     CLR   B_PAGE_LED
+     CLR   B_PAGE
+     
+     MOV   R0,#0E0H
+     MOV   A,@R0
+     MOV   LINE_DA,A
+     LCALL LINE_SET
+     LCALL KEY_DISPLAYSOURCE
+    
+     ;JB    B_COMM_PAGE,NOKEY
+     LCALL COMMSENDPAGE
+     ;CALL MUTEON
+     CLR   B_COMM_PAGE
+NOKEY:
+     ORL  P0,#11100000B
+     CLR  B_KK  ;DAI BIAO KEY SONG GUO
+     JNB  P_ON,OFF_LED
+     JNB  B_YKLX,YKWLX
+     RET
+YES: RET
+PAGEKPD:
+     ANL   P0,#11100001B
+     ORL   P0,#11100000B
+     MOV   P2,#0FFH
+     ANL   P0,#01111111B
+     MOV   P2,#0FFH
+     MOV   A,P2
+     CJNE  A,#11011111B,PDPRI
+     ;JB    B_COMM_PAGE,PAGEKPD_OUT
+     SETB  B_COMM_PAGE
+     SETB  B_PAGE_LED
+     SETB  B_PAGE
+     ;LCALL COMMSENDPAGE
+PAGEKPD_OUT:
+     RET
+PDPRI:
+     ANL   P0,#11100001B
+     ORL   P0,#11100000B
+     MOV   P2,#0FFH
+     ANL   P0,#11011111B
+     MOV   P2,#0FFH
+     MOV   A,P2
+     CJNE  A,#10111111B,RIBENREN
+     CLR   B_COMM_PRI
+     SETB  B_PRI
+     JB    B_KK,PDPRI_OUT
+     LCALL COMMSENDPRI
+PDPRI_OUT:
+     RET
+RIBENREN:
+     JB    B_COMM_PRI,RIBENREN_OUT
+     JB    B_COMM_PAGE,PDPRI_OUT
+     CLR   B_PAGE_LED
+     CLR   B_PAGE
+     
+         MOV   R0,#0E0H
+    MOV   A,@R0
+    MOV   LINE_DA,A
+    LCALL LINE_SET
+    LCALL KEY_DISPLAYSOURCE
+     
+     LCALL MUTEON
+     LCALL COMMSENDPAGE
+     CLR   MANA2
+     CLR   MANA
+RIBENREN_OUT:
+     RET
+YKWLX:     ; CLR KNBO_D1
+     ; JMP NOKEY_O
+SET_VOLE2:;CLR KNBO_D2
+;          setb VOL1_U
+;          SETB VOL1_D
+;          SETB VOL2_U
+;          SETB VOL2_D
+NOKEY_O:
+     RET
+OFF_LED:
+;SETB KNBO_D1
+;SETB KNBO_D2
+;setb VOL1_U
+;SETB VOL1_D
+;SETB VOL2_U
+;SETB VOL2_D
+     RET
+;====A FAN HUI 0FFH=> YOU KEY
+PDHANG:
+     MOV   P2,#0FFH
+     MOV   A,P2
+     NOP
+     SUBB  A,#0FFH
+     JZ    NOH
+     LCALL DLA2MSXD
+     MOV   A,P2
+     SUBB  A,#0FFH
+     JZ    NOH
+     MOV   A,#0FFH
+     RET
+NOH:
+     MOV   A,#0
+     RET
+PDLIE:       ;PAN DUAN KEY LIE
+     MOV   P2,#0FFH
+     MOV   A,P2
+     CLR   B_COMM_PRI
+     CLR   B_PRI
+     CLR   B_COMM_PAGE
+     CLR   B_PAGE
+     CJNE  A,#11111110B,LL1
+     ORL   KEYDA,#01H
+     LJMP  LLR
+LL1: CJNE  A,#11111101B,LL2
+     ORL   KEYDA,#02H
+     LJMP  LLR
+LL2: CJNE  A,#11111011B,LL3
+     ORL   KEYDA,#03H
+     LJMP  LLR
+LL3: CJNE  A,#11110111B,LL4
+     ORL   KEYDA,#04H
+     LJMP  LLR
+LL4: CJNE  A,#11101111B,LL5
+     ORL   KEYDA,#05H
+     LJMP  LLR
+LL5: CJNE  A,#11011111B,LL6
+     ORL   KEYDA,#06H
+LLR: SETB  B_K_TRU
+     RET
+;LL3:CJNE A,#11111011B,LL3 ;;  BAO LIU TE SHU ZU HE JIAN
+;ORL KEYDA,#03H            ;;
+LL6:
+     MOV   KEYDA,#00H
+     CLR   B_K_TRU
+     RET
